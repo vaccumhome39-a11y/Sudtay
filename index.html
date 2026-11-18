@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ค้นหาสินค้า</title>
 <meta name="author" content="เฟย">
+<meta name="theme-color" content="#c2410c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ค้นหาสินค้า">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
@@ -21,6 +28,7 @@
     </div>
     <div class="chips" id="chips"></div>
   </div>
+  <button class="installbtn" id="installBtn" hidden>⬇ ติดตั้งแอป</button>
   <button class="cartbtn" id="cartBtn">ตะกร้า <span class="badge" id="badge">0</span> <span id="hdrTotal" class="small"></span></button>
 </header>
 <main>

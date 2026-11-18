@@ -114,7 +114,7 @@ const $=s=>document.querySelector(s);
 const fmt=n=>n.toLocaleString('th-TH',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1600)}
-function tab(t){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t))}
+function tab(t){if(t!=='results'&&innerWidth<900){const a=document.querySelector('aside');setTimeout(()=>a.scrollIntoView({behavior:'smooth',block:'start'}),50)}document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t))}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
 const priceHtml=p=>p.price>0?`<span class="price">฿${fmt(p.price)}</span>`:`<span class="price zero">ไม่มีราคา</span>`;
 
@@ -377,3 +377,20 @@ $('#clear').onclick=()=>{$('#q').value='';run();$('#q').focus()};
 renderChips();
 window.addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>buildGraph(last),200)});
 renderCart(); renderResults(null); buildGraph(null);
+
+/* ---------- installable app (PWA) ---------- */
+(function(){
+  if('serviceWorker' in navigator && window.isSecureContext && location.protocol!=='file:'){
+    navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW',e));
+  }
+  const btn=document.getElementById('installBtn'); let deferred=null;
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+  window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferred=e; if(!standalone) btn.hidden=false; });
+  window.addEventListener('appinstalled',()=>{ btn.hidden=true; deferred=null; toast('ติดตั้งแอปแล้ว'); });
+  btn.onclick=async()=>{
+    if(deferred){ deferred.prompt(); const r=await deferred.userChoice; deferred=null; if(r.outcome==='accepted') btn.hidden=true; }
+    else toast('กดเมนู ⋮ ของ Chrome แล้วเลือก “ติดตั้งแอป” หรือ “เพิ่มลงในหน้าจอหลัก”');
+  };
+  // iPhone/iPad Safari has no install prompt: show the button with instructions
+  if(!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)){ btn.hidden=false; btn.onclick=()=>toast('กดปุ่มแชร์ ⬆ แล้วเลือก “เพิ่มไปยังหน้าจอโฮม”'); }
+})();
