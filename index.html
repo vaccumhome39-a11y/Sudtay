@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ค้นหาสินค้า</title>
+<meta name="author" content="เฟย">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">ค้นหา<span>สินค้า</span><div class="by">จัดทำโดย เฟย</div></div>
+  <div class="searchwrap">
+    <div class="search">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="text" placeholder="พิมพ์ชื่อ คำพ้อง ขนาด หรือการใช้งาน เช่น ไวเมท, DB12, เหล็ก 2 หุน, ทำโครงหลังคา" autocomplete="off">
+      <button class="clear" id="clear" aria-label="ล้าง">×</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <button class="cartbtn" id="cartBtn">ตะกร้า <span class="badge" id="badge">0</span> <span id="hdrTotal" class="small"></span></button>
+</header>
+<main>
+  <section id="graphPane">
+    <svg id="graph"></svg>
+    <div class="status" id="status"></div>
+    <div class="zoomctl"><button id="zin" aria-label="ซูมเข้า">+</button><button id="zout" aria-label="ซูมออก">−</button><button id="zfit" aria-label="พอดีจอ">⤢</button></div>
+    <div class="legend"><span><i style="background:var(--q)"></i>คำค้น</span><span><i style="background:var(--group)"></i>กลุ่ม</span><span><i style="background:var(--prod)"></i>สินค้า</span><span><i style="background:#fff;border:1.5px dashed var(--pair)"></i>ซื้อคู่กัน</span></div>
+    <div class="tip" id="tip"></div>
+  </section>
+  <aside>
+    <div class="tabs"><button data-t="results" class="on">ผลค้นหา</button><button data-t="detail">รายละเอียด</button><button data-t="cart">ตะกร้า</button></div>
+    <div class="pane on" id="p-results"></div>
+    <div class="pane" id="p-detail"><p class="hint">คลิกสินค้าในกราฟหรือในรายการเพื่อดูรายละเอียด</p></div>
+    <div class="pane" id="p-cart"></div>
+  </aside>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="data/products.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
