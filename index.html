@@ -73,7 +73,47 @@ main{position:relative;min-height:0}
 .legend span{display:flex;align-items:center;gap:8px}
 .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
 .legend .line{width:18px;border-top:2px dashed var(--buy)}
-.tools{position:absolute;left:16px;bottom:14px;display:flex;gap:6px}
+.tools{position:absolute;left:16px;bottom:14px;display:flex;gap:6px;z-index:2}
+.tools button{display:flex;align-items:center;gap:6px}
+.tools button[aria-expanded="true"]{border-color:var(--brand-2);color:var(--brand-2)}
+/* unit converter window */
+.conv{position:absolute;left:16px;bottom:52px;width:330px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--brand-2);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px 14px;z-index:5;display:grid;gap:10px;font-size:13.5px}
+.conv .chd{display:flex;justify-content:space-between;align-items:center}
+.conv .chd b{font-size:15px}
+.conv .chd button{border:0;background:var(--soft);border-radius:7px;width:28px;height:28px}
+.cvrow{display:grid;grid-template-columns:1fr auto;gap:6px}
+.cvrow input,.cvrow select,.cvto select{font:inherit;font-size:15px;border:1.5px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--bg);color:var(--ink);min-width:0}
+.cvrow input{font-family:var(--f-mono);font-size:17px}
+.cvrow input:focus,.cvrow select:focus,.cvto select:focus{outline:none;border-color:var(--brand-2)}
+.cvto{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:center}
+.cvswap{border:1px solid var(--line);background:var(--bg);border-radius:8px;width:38px;height:38px;font-size:17px}
+.cvres{background:var(--soft);border-radius:10px;padding:10px 12px}
+.cvres .big{font-family:var(--f-mono);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;word-break:break-all}
+.cvres .big small{font-family:var(--f-body);font-size:14px;font-weight:500;color:var(--muted)}
+.cvres .alt{font-size:13px;color:var(--muted)}
+.cvpre{display:flex;flex-wrap:wrap;gap:5px}
+.cvpre button{border:1px solid var(--line);background:none;border-radius:99px;padding:1px 10px;font-size:12.5px}
+.cvpre button:hover{border-color:var(--brand-2);color:var(--brand-2)}
+.cvall{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12.5px;color:var(--muted)}
+.cvall span:nth-child(even){font-family:var(--f-mono);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+/* full-screen item list */
+.tab .exp{margin-left:5px;vertical-align:-2px;opacity:.7}
+.fs{position:fixed;inset:0;z-index:8;background:var(--bg);display:grid;grid-template-rows:auto auto 1fr;grid-template-columns:minmax(0,1fr)}
+.fshead{display:flex;gap:12px;align-items:center;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.fshead .back{border:1px solid var(--line);background:var(--bg);border-radius:9px;height:38px;padding:0 12px;font-weight:600;display:flex;gap:6px;align-items:center;white-space:nowrap}
+.fstitle{flex:1;min-width:0;display:grid;line-height:1.3}
+.fstitle b{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fstitle span{font-size:12.5px;color:var(--muted)}
+.fsbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.fsbar input,.fsbar select{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--bg);color:var(--ink);min-width:0}
+.fsbar input{flex:1 1 200px}
+.fsbar input:focus,.fsbar select:focus{outline:none;border-color:var(--accent)}
+.scope{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;white-space:nowrap}
+.scope button{border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:0 9px;font-size:12.5px}
+.fsgrid{overflow:auto;padding:16px 20px 28px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-content:start}
+.fsgrid .card{cursor:pointer}
+.fsgrid .more{min-height:120px;grid-column:1/-1}
+.fsgrid .none{grid-column:1/-1}
 .tools button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 10px;font-size:13px}
 .info{position:absolute;right:16px;top:14px;width:min(340px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--group);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow);font-size:13.5px;max-height:calc(100% - 28px);overflow:auto}
 .info.buy{border-left-color:var(--buy)}
@@ -227,6 +267,14 @@ body.cart-open .drawer{transform:none}
   body.searching .tryrow{display:none}
   body.searching .sub:not(:has(.summary:not(:empty),.upd:not(:empty))){display:none}
   .summary{margin-left:0}
+  .tools{left:10px;top:10px;bottom:auto}
+  .conv{left:10px;right:10px;top:50px;bottom:auto;width:auto;max-height:calc(100% - 60px);overflow:auto}
+  .fshead,.fsbar{padding-left:14px;padding-right:14px}
+  .fshead .back span{display:none}
+  .fsgrid{padding:12px 14px 24px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+  .fsgrid .card{padding:9px 10px}
+  .fsgrid .card .price{font-size:15px}
+  .fsgrid .add{padding:5px 9px}
   .tryrow{display:flex;gap:6px;align-items:center;flex:1 1 100%;min-width:0;max-width:100%;padding:0 0 2px;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
   .tryrow::-webkit-scrollbar{display:none}
   .chip{flex:0 0 auto}
@@ -285,7 +333,17 @@ body.cart-open .drawer{transform:none}
     <span><i class="dot" style="background:var(--buy)"></i>ซื้อคู่กัน</span>
     <span><i class="line"></i>เส้นแนะนำซื้อคู่กัน</span>
   </div>
-  <div class="tools"><button id="fit">จัดกึ่งกลาง</button></div>
+  <div class="tools"><button id="fit">จัดกึ่งกลาง</button><button id="convbtn" aria-expanded="false" aria-controls="conv"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 15.5 15.5 3 21 8.5 8.5 21z"/><path d="m7 12 2 2m1-5 2 2m1-5 2 2"/></svg>แปลงหน่วย</button></div>
+  <aside class="conv" id="conv" hidden aria-label="แปลงหน่วยความยาว">
+    <div class="chd"><b>แปลงหน่วยความยาว</b><button id="cvclose" aria-label="ปิดตัวแปลงหน่วย">✕</button></div>
+    <div class="cvrow"><input id="cv-v" inputmode="decimal" autocomplete="off" aria-label="ตัวเลขที่จะแปลง" placeholder="เช่น 100 หรือ 1 1/2"><select id="cv-from" aria-label="จากหน่วย"></select></div>
+    <div class="cvto"><button class="cvswap" id="cvswap" aria-label="สลับหน่วย">⇅</button><select id="cv-to" aria-label="เป็นหน่วย"></select></div>
+    <div class="cvres" aria-live="polite"><div class="big" id="cv-out">–</div><div class="alt" id="cv-alt"></div></div>
+    <div class="cvpre" id="cvpre">
+      <button data-p="cm,in">ซม. → นิ้ว</button><button data-p="in,cm">นิ้ว → ซม.</button><button data-p="m,cm">เมตร → ซม.</button><button data-p="cm,m">ซม. → เมตร</button><button data-p="ft,m">ฟุต → เมตร</button><button data-p="hun,mm">หุน → มม.</button>
+    </div>
+    <div class="cvall" id="cv-all"></div>
+  </aside>
   <aside class="info" id="info" hidden></aside>
   <div class="loading" id="loading" role="status"><div><span class="spin"></span><b>กำลังโหลดข้อมูลสินค้า…</b><span id="loadmsg">ดึงข้อมูลล่าสุดจากร้าน</span></div></div>
   <div class="empty" id="empty" hidden><div><b>ไม่พบสินค้าที่ตรงกับคำค้นหา</b>ลองพิมพ์คำอื่น หรือพิมพ์สั้นลง เช่น "กาว" แทน "กาวติดกระเบื้องห้องน้ำ"</div></div>
@@ -293,7 +351,7 @@ body.cart-open .drawer{transform:none}
 
 <footer>
   <div class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tab-res" aria-selected="true">ผลการค้นหา<span class="n" id="n-res">0</span></button>
+    <button class="tab" role="tab" id="tab-res" aria-selected="true" title="เปิดรายการทั้งหมดแบบเต็มจอ">ผลการค้นหา<span class="n" id="n-res">0</span><svg class="exp" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
     <button class="tab buyt" role="tab" id="tab-buy" aria-selected="false">ซื้อคู่กัน<span class="n" id="n-buy">0</span></button>
     <span class="filter" id="filter" hidden></span>
     <div class="nav"><button id="prev" aria-label="เลื่อนซ้าย">‹</button><button id="next" aria-label="เลื่อนขวา">›</button></div>
@@ -301,6 +359,21 @@ body.cart-open .drawer{transform:none}
   <div class="strip" id="strip"></div>
 </footer>
 
+<section class="fs" id="fs" hidden role="dialog" aria-modal="true" aria-labelledby="fsq">
+  <div class="fshead">
+    <button class="back" id="fsclose" aria-label="กลับไปหน้าค้นหา"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg><span>กลับ</span></button>
+    <div class="fstitle"><b id="fsq"></b><span id="fsn"></span></div>
+    <button class="cartbtn" id="fscart" aria-label="เปิดตะกร้าสินค้า"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg><span class="badge" id="fsbadge">0</span></button>
+  </div>
+  <div class="fsbar">
+    <button class="tab" role="tab" id="fs-res">ผลการค้นหา<span class="n" id="fsn-res">0</span></button>
+    <button class="tab buyt" role="tab" id="fs-buy">ซื้อคู่กัน<span class="n" id="fsn-buy">0</span></button>
+    <span class="scope" id="fsscope" hidden></span>
+    <input id="fsfilter" type="search" autocomplete="off" placeholder="กรองในรายการ: ชื่อหรือรหัสสินค้า" aria-label="กรองในรายการ">
+    <select id="fssort" aria-label="เรียงลำดับ"><option value="rel">เรียงตามความตรง</option><option value="pa">ราคา ต่ำ → สูง</option><option value="pd">ราคา สูง → ต่ำ</option><option value="nm">ชื่อ ก → ฮ</option></select>
+  </div>
+  <div class="fsgrid" id="fsgrid"></div>
+</section>
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" aria-label="ตะกร้าสินค้า">
   <header><h2>ตะกร้าสินค้า</h2><button class="x" id="close" aria-label="ปิดตะกร้า">✕</button></header>
@@ -579,20 +652,22 @@ function renderTabs(){
 }
 function renderStrip(){
   renderTabs();
+  if(!$('#fs').hidden) renderFull();
   const list=currentList(), el=$('#strip');
   if(!R){ el.innerHTML='<div class="none">พิมพ์คำค้นหาด้านบนเพื่อดูสินค้า</div>'; return; }
   if(!list.length){ el.innerHTML=`<div class="none">${tab==='buy'?'กลุ่มนี้ยังไม่มีสินค้าที่แนะนำให้ซื้อคู่กัน':'ไม่พบสินค้า'}</div>`; return; }
-  const items=list.slice(0,shown).map(r=>{ const p=r.p, g=p.gi>=0?G[p.gi]:null, inC=cart[p.key];
+  const items=list.slice(0,shown).map(cardHTML).join('');
+  el.innerHTML=items+(list.length>shown?`<button class="more" id="more">แสดงเพิ่ม<br>อีก ${(list.length-shown).toLocaleString()} รายการ</button>`:'');
+  if(list.length>shown) $('#more').onclick=()=>{shown+=120;renderStrip()};
+  if(!hlCode) el.scrollLeft=0;
+}
+function cardHTML(r){ const p=r.p, g=p.gi>=0?G[p.gi]:null, inC=cart[p.key];
     return `<article class="card${p.key===hlCode?' hl':''}" data-code="${esc(p.key)}">
       <div class="top"><span class="code">${esc(p.code)}</span>${relTag(r)}</div>
       <h4 title="${esc(p.name)}">${esc(p.name)}</h4>
       <div class="mid">${(()=>{const im=imgFor(p);return im?`<img class="thumb" loading="lazy" src="${esc(im.src)}" alt="" onerror="this.remove()">`:''})()}<div class="grp">${g?esc(g.n):''}<br><button class="view" data-view="${esc(p.key)}">${imgFor(p)?'ดูรูปสินค้า':'ดูรายละเอียด'}</button></div></div>
       <div class="row"><div class="pr">${priceHTML(p)}</div>
-      <button class="add${inC?' in':''}" data-add="${esc(p.key)}">${inC?'✓ '+inC:'+ ตะกร้า'}</button></div></article>`; }).join('');
-  el.innerHTML=items+(list.length>shown?`<button class="more" id="more">แสดงเพิ่ม<br>อีก ${(list.length-shown).toLocaleString()} รายการ</button>`:'');
-  if(list.length>shown) $('#more').onclick=()=>{shown+=120;renderStrip()};
-  if(!hlCode) el.scrollLeft=0;
-}
+      <button class="add${inC?' in':''}" data-add="${esc(p.key)}">${inC?'✓ '+inC:'+ ตะกร้า'}</button></div></article>`; }
 $('#strip').addEventListener('click',e=>{
   const b=e.target.closest('[data-add]'); if(b){ addCart(b.dataset.add); return; }
   const v=e.target.closest('[data-view]'); if(v){ openModal(v.dataset.view); return; }
@@ -601,7 +676,46 @@ $('#strip').addEventListener('click',e=>{
     document.querySelectorAll('.card.hl').forEach(x=>x.classList.remove('hl')); c.classList.add('hl');
     if(p.gi>=0 && focus!==p.gi && tab==='res'){ focus=p.gi; build(); renderInfo(); renderTabs(); } else render(); }
 });
-$('#tab-res').onclick=()=>{tab='res';shown=120;renderStrip()};
+/* ---------- full-screen item list ---------- */
+let fsShown=60, fsList=[];
+function fullList(){
+  let a=currentList().slice();
+  const q=norm($('#fsfilter').value);
+  if(q) a=a.filter(r=>r.p.nName.includes(q)||r.p.nCode.includes(q));
+  const pr=p=>p.price>0?amt(p,1):Infinity, srt=$('#fssort').value;
+  if(srt==='pa') a.sort((x,y)=>pr(x.p)-pr(y.p));
+  else if(srt==='pd') a.sort((x,y)=>(y.p.price>0?amt(y.p,1):-1)-(x.p.price>0?amt(x.p,1):-1));
+  else if(srt==='nm') a.sort((x,y)=>x.p.name.localeCompare(y.p.name,'th'));
+  return a;
+}
+function renderFull(){
+  fsList=fullList();
+  $('#fsq').textContent=R?`${tab==='buy'?'ซื้อคู่กัน':'ผลการค้นหา'} “${R.q}”`:'รายการสินค้า';
+  $('#fsn').textContent=`${fsList.length.toLocaleString()} รายการ`+($('#fsfilter').value.trim()?' ที่ตรงกับตัวกรอง':'');
+  $('#fsn-res').textContent=$('#n-res').textContent; $('#fsn-buy').textContent=$('#n-buy').textContent;
+  $('#fs-res').setAttribute('aria-selected',tab==='res'); $('#fs-buy').setAttribute('aria-selected',tab==='buy');
+  const sc=$('#fsscope'), fg=focus!=null?G[focus]:(tab==='buy'&&R&&R.groups[0]?R.groups[0].g:null);
+  if(fg){ sc.hidden=false; sc.innerHTML=`${tab==='buy'?'ใช้คู่กับ':'เฉพาะกลุ่ม'}: <b>${esc(cut(fg.n,24))}</b>${focus!=null&&tab==='res'?' <button id="fsall">ดูทุกกลุ่ม ✕</button>':''}`;
+    const b=$('#fsall'); if(b) b.onclick=()=>{ setFocus(null); renderFull(); }; } else sc.hidden=true;
+  const g=$('#fsgrid');
+  g.innerHTML=fsList.length?fsList.slice(0,fsShown).map(cardHTML).join('')+(fsList.length>fsShown?`<button class="more" id="fsmore">แสดงเพิ่มอีก ${(fsList.length-fsShown).toLocaleString()} รายการ</button>`:'')
+    :`<div class="none">${$('#fsfilter').value.trim()?'ไม่มีสินค้าที่ตรงกับตัวกรอง ลองพิมพ์ให้สั้นลง':'ไม่มีสินค้าในรายการนี้'}</div>`;
+  const m=$('#fsmore'); if(m) m.onclick=()=>{fsShown+=60;renderFull()};
+}
+function openFull(){ fsShown=60; $('#fs').hidden=false; renderFull(); $('#fsgrid').scrollTop=0; $('#fsclose').focus(); }
+function closeFull(){ $('#fs').hidden=true; $('#fsfilter').value=''; }
+$('#fsclose').onclick=closeFull;
+$('#fscart').onclick=()=>openCart(true);
+$('#fs-res').onclick=()=>{tab='res';shown=120;fsShown=60;renderStrip()};
+$('#fs-buy').onclick=()=>{tab='buy';shown=120;fsShown=60;renderStrip()};
+let fsDeb; $('#fsfilter').addEventListener('input',()=>{clearTimeout(fsDeb);fsDeb=setTimeout(()=>{fsShown=60;renderFull()},150)});
+$('#fssort').onchange=()=>{fsShown=60;renderFull()};
+$('#fsgrid').addEventListener('scroll',e=>{const g=e.target; if(fsList.length>fsShown&&g.scrollTop+g.clientHeight>g.scrollHeight-400){fsShown+=60;renderFull()}});
+$('#fsgrid').addEventListener('click',e=>{
+  const b=e.target.closest('[data-add]'); if(b){ addCart(b.dataset.add); return; }
+  const c=e.target.closest('.card'); if(c) openModal(c.dataset.code);
+});
+$('#tab-res').onclick=()=>{tab='res';shown=120;renderStrip();openFull()};
 $('#tab-buy').onclick=()=>{tab='buy';shown=120;renderStrip()};
 $('#prev').onclick=()=>$('#strip').scrollBy({left:-500,behavior:'smooth'});
 $('#next').onclick=()=>$('#strip').scrollBy({left:500,behavior:'smooth'});
@@ -611,7 +725,7 @@ function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clea
 function addCart(code){ cart[code]=(cart[code]||0)+1; saveCart(); renderCart(); renderStrip(); toast('เพิ่ม '+cut(byCode.get(code).name,30)+' ลงตะกร้าแล้ว'); }
 function renderCart(){
   const codes=Object.keys(cart).filter(c=>byCode.has(c)&&cart[c]>0);
-  $('#badge').textContent=codes.reduce((a,c)=>a+cart[c],0);
+  $('#badge').textContent=$('#fsbadge').textContent=codes.reduce((a,c)=>a+cart[c],0);
   const items=$('#items');
   if(!codes.length){ items.innerHTML='<p class="none" style="padding:24px 0">ยังไม่มีสินค้าในตะกร้า กด "+ ตะกร้า" ที่การ์ดสินค้าด้านล่างเพื่อเพิ่ม</p>'; }
   else items.innerHTML=codes.map(c=>{const p=byCode.get(c),q=cart[c];
@@ -634,7 +748,7 @@ $('#items').addEventListener('change',e=>{const c=e.target.dataset.q; if(!c) ret
 const openCart=o=>document.body.classList.toggle('cart-open',o);
 $('#cartbtn').onclick=()=>openCart(true); $('#close').onclick=()=>openCart(false); $('#scrim').onclick=()=>openCart(false);
 let mCode=null;
-function openModal(code){ mCode=code; const p=byCode.get(code), g=p.gi>=0?G[p.gi]:null, im=imgFor(p), list=currentList();
+function openModal(code){ mCode=code; const p=byCode.get(code), g=p.gi>=0?G[p.gi]:null, im=imgFor(p), list=$('#fs').hidden?currentList():fsList;
   const k=list.findIndex(r=>r.p.key===code);
   $('#mimg').innerHTML=(im?`<img src="${esc(im.src)}" alt="${esc(p.name)}" onerror="this.parentNode.querySelector('.noimg').hidden=false;this.remove()">${im.own?'':'<span class="src">รูปตัวอย่างของกลุ่มสินค้า</span>'}`:'')+
     `<div class="noimg"${im?' hidden':''}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/></svg>ยังไม่มีรูปสินค้านี้<br>สอบถามรูปเพิ่มเติมได้ที่ร้าน</div>`+
@@ -646,16 +760,48 @@ function openModal(code){ mCode=code; const p=byCode.get(code), g=p.gi>=0?G[p.gi
     ${g&&g.b.length?`<dt>ซื้อคู่กัน</dt><dd>${g.b.map(bi=>esc(G[bi].n)).join(', ')}</dd>`:''}</dl>
     <div class="acts"><button class="primary" id="madd">${inC?'✓ ในตะกร้า '+inC+' · เพิ่มอีก':'+ ใส่ตะกร้า'}</button>${g?'<button class="ghost" id="mgrp">ดูในกราฟ</button>':''}</div>`;
   $('#madd').onclick=()=>{addCart(code);openModal(code)};
-  if(g) $('#mgrp').onclick=()=>{closeModal();if(focus!==p.gi){focus=p.gi;build();renderInfo();renderTabs()}highlight(code)};
+  if(g) $('#mgrp').onclick=()=>{closeModal();closeFull();if(focus!==p.gi){focus=p.gi;build();renderInfo();renderTabs()}highlight(code)};
   $('#modal').hidden=false; $('#mclose').focus();
 }
 function closeModal(){ $('#modal').hidden=true; mCode=null; }
-$('#mimg').addEventListener('click',e=>{const b=e.target.closest('[data-m]'); if(b) openModal(currentList()[+b.dataset.m].p.key)});
+$('#mimg').addEventListener('click',e=>{const b=e.target.closest('[data-m]'); if(b) openModal(($('#fs').hidden?currentList():fsList)[+b.dataset.m].p.key)});
 $('#mbd').onclick=closeModal; $('#mclose').onclick=closeModal;
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ if(mCode) closeModal(); else openCart(false); }
+  if(e.key==='Escape'){ if(mCode) closeModal(); else if(document.body.classList.contains('cart-open')) openCart(false); else if(!$('#fs').hidden) closeFull(); else if(!$('#conv').hidden) toggleConv(false); }
   if(mCode&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){ const b=document.querySelector(`.mnav.${e.key==='ArrowRight'?'r':'l'}`); if(b) b.click(); }
 });
+
+/* ---------- unit converter (length) ---------- */
+const UNITS=[['mm','มิลลิเมตร (มม.)','มม.',1],['cm','เซนติเมตร (ซม.)','ซม.',10],['m','เมตร (ม.)','ม.',1000],['in','นิ้ว','นิ้ว',25.4],['hun','หุน (1/8 นิ้ว)','หุน',3.175],['ft','ฟุต','ฟุต',304.8],['wa','วา (2 ม.)','วา',2000]];
+const U=Object.fromEntries(UNITS.map(u=>[u[0],u]));
+['#cv-from','#cv-to'].forEach(sel=>$(sel).innerHTML=UNITS.map(u=>`<option value="${u[0]}">${u[1]}</option>`).join(''));
+let CV={v:'100',f:'cm',t:'in'}; try{Object.assign(CV,JSON.parse(localStorage.getItem('conv-v1')||'{}'))}catch(e){}
+$('#cv-v').value=CV.v; $('#cv-from').value=CV.f; $('#cv-to').value=CV.t;
+const parseNum=t=>{ t=String(t).trim().replace(/,/g,'.'); let m;
+  if((m=t.match(/^(\d+(?:\.\d+)?)\s+(\d+)\s*\/\s*(\d+)$/))) return +m[1]+ +m[2]/+m[3];
+  if((m=t.match(/^(\d+)\s*\/\s*(\d+)$/))) return +m[1]/+m[2];
+  return t&&isFinite(+t)?+t:NaN; };
+const nf=n=>{ const a=Math.abs(n); const d=a>=1000?2:a>=1?4:6; return n.toLocaleString('th-TH',{maximumFractionDigits:d}); };
+const inchFrac=v=>{ const e=Math.round(v*8), w=Math.floor(e/8), r=e%8; if(!r) return `${w}`; const g=r%4===0?4:r%2===0?2:1; return `${w?w+' ':''}${r/g}/${8/g}`; };
+function convert(){
+  const v=parseNum($('#cv-v').value), f=$('#cv-from').value, t=$('#cv-to').value;
+  CV={v:$('#cv-v').value,f,t}; try{localStorage.setItem('conv-v1',JSON.stringify(CV))}catch(e){}
+  if(isNaN(v)){ $('#cv-out').innerHTML='–'; $('#cv-alt').textContent=$('#cv-v').value.trim()?'พิมพ์เป็นตัวเลข เช่น 120, 2.5 หรือ 1 1/2':''; $('#cv-all').innerHTML=''; return; }
+  const mm=v*U[f][3], out=mm/U[t][3];
+  $('#cv-out').innerHTML=`${nf(out)} <small>${U[t][2]}</small>`;
+  let alt=`${nf(v)} ${U[f][2]} = ${nf(out)} ${U[t][2]}`;
+  const inch=mm/25.4;
+  if(t==='in'&&Math.abs(inch*8-Math.round(inch*8))>1e-9) alt+=` · ประมาณ ${inchFrac(inch)} นิ้ว`;
+  if(t==='ft'){ const ft=Math.floor(inch/12+1e-9), ri=inch-ft*12; alt+=` · = ${ft} ฟุต ${inchFrac(ri)} นิ้ว`; }
+  $('#cv-alt').textContent=alt;
+  $('#cv-all').innerHTML=UNITS.filter(u=>u[0]!==f).map(u=>`<span>${u[1]}</span><span>${nf(mm/u[3])}</span>`).join('');
+}
+function toggleConv(on){ $('#conv').hidden=!on; $('#convbtn').setAttribute('aria-expanded',String(on)); if(on){ convert(); $('#cv-v').focus(); $('#cv-v').select(); } }
+$('#convbtn').onclick=()=>toggleConv($('#conv').hidden);
+$('#cvclose').onclick=()=>toggleConv(false);
+$('#cv-v').addEventListener('input',convert); $('#cv-from').onchange=convert; $('#cv-to').onchange=convert;
+$('#cvswap').onclick=()=>{ const a=$('#cv-from').value; $('#cv-from').value=$('#cv-to').value; $('#cv-to').value=a; convert(); };
+$('#cvpre').addEventListener('click',e=>{ const b=e.target.closest('[data-p]'); if(!b) return; const [a,c]=b.dataset.p.split(','); $('#cv-from').value=a; $('#cv-to').value=c; convert(); $('#cv-v').focus(); });
 
 /* ---------- wiring ---------- */
 function run(q){
