@@ -490,10 +490,20 @@ const fuse=()=>{ if(!fuseG&&window.Fuse){
   fuseP=new Fuse(P,{keys:['name','code'],threshold:.34,ignoreLocation:true,includeScore:true});}};
 
 /* ---------- search: linear scan with weighted fields, fuzzy fallback ---------- */
+const SEG=(window.Intl&&Intl.Segmenter)?new Intl.Segmenter('th',{granularity:'word'}):null;
+function thaiWords(q){ if(!SEG) return []; const out=[];
+  for(const x of SEG.segment(q)) if(x.isWordLike){ const w=norm(x.segment); if(w.length>=2&&!out.includes(w)) out.push(w); }
+  return out; }
 function search(raw){
   const q=raw.trim(); if(!q) return null;
   let toks=q.split(/[\s,]+/).map(norm).filter(Boolean);
   if(toks.length>1) toks.push(norm(q));
+  /* Thai has no spaces, so "สีไม้มะค่าอำพัน" is one long token that no name contains as-is.
+     Split it into words (สี | ไม้ | มะค่า | อำพัน) and score by how many words a name contains.
+     Rare words (อำพัน, มะค่า) count more than common ones (สี, ไม้). */
+  const W=thaiWords(q), wW=W.map(w=>{ let df=0; for(const p of P) if(p.nName.includes(w)) df++; return Math.log((P.length+1)/(df+1))+.5; });
+  const wTot=wW.reduce((a,b)=>a+b,0);
+  const cover=txt=>{ if(W.length<2) return 0; let c=0; W.forEach((w,i)=>{ if(txt.includes(w)) c+=wW[i]; }); return c/wTot; };
   const gScore=new Float32Array(G.length);
   for(const g of G){ let s=0,hit=0;
     /* Thai names put the main word first: "เหล็กเพส" is steel, "ดอกเจาะเหล็ก" is a drill bit for steel.
@@ -508,12 +518,14 @@ function search(raw){
       else if(g.nD.includes(t)) b=2;
       if(b){s+=b;hit++} }
     if(hit===toks.length && toks.length>1) s*=1.4;
+    if(W.length>=2){ if(g.nAll==null) g.nAll=g.nN+'|'+g.nSyn.join('|')+'|'+g.nW; const c=cover(g.nAll); if(c>=.6) s+=10*c*c; }
     gScore[g.i]=s; }
   const res=[];
   for(const p of P){ let own=0;
     for(const t of toks){ if(p.nCode===t) own+=30; else if(t.length>=3&&p.nCode.startsWith(t)) own+=14;
       else if(p.nName.startsWith(t)) own+=16;
       else if(p.nName.includes(t)) own+=7; }
+    if(W.length>=2){ const c=cover(p.nName); if(c>=.6) own+=14*c*c; }
     const gs=p.gi>=0?gScore[p.gi]:0;
     const s=own+gs*.6; if(s>0) res.push({p,s,own}); }
   let fuzzy=false;
@@ -534,7 +546,7 @@ function search(raw){
 }
 
 /* ---------- state ---------- */
-let R=null, focus=null, tab='res', hlCode=null, shown=120;
+let R=null, focusAuto=false, focus=null, tab='res', hlCode=null, shown=120;
 let cart={}; try{cart=JSON.parse(localStorage.getItem('cart-v2')||'{}')}catch(e){}
 const saveCart=()=>{try{localStorage.setItem('cart-v2',JSON.stringify(cart))}catch(e){}};
 
@@ -617,7 +629,7 @@ function onNode(d){
   setFocus(d.gi);
 }
 function setFocus(gi,resetHl=true){
-  focus=gi; if(resetHl) hlCode=null; shown=120;
+  focus=gi; focusAuto=false; if(resetHl) hlCode=null; shown=120;
   if(tab==='buy' && gi==null) tab='res';
   build(); renderInfo(); renderStrip();
 }
@@ -658,7 +670,7 @@ function currentList(){
   if(!R) return [];
   if(tab==='buy'){ const fg=focus!=null?G[focus]:(R.groups[0]&&R.groups[0].g); if(!fg) return [];
     return fg.b.flatMap(bi=>G[bi].prods.slice(0,30).map(p=>({p,rel:-1}))); }
-  if(focus!=null){ const inRes=new Map(R.res.filter(r=>r.p.gi===focus).map(r=>[r.p.i,r]));
+  if(focus!=null&&!focusAuto){ const inRes=new Map(R.res.filter(r=>r.p.gi===focus).map(r=>[r.p.i,r]));
     const a=[...inRes.values()]; for(const p of G[focus].prods) if(!inRes.has(p.i)) a.push({p,rel:-1,buy:true}); return a; }
   return R.res;
 }
@@ -670,11 +682,11 @@ function relTag(r){
 function renderTabs(){
   const fg=focus!=null?G[focus]:(R&&R.groups[0]&&R.groups[0].g);
   const nb=fg?fg.b.reduce((a,bi)=>a+Math.min(30,G[bi].prods.length),0):0;
-  $('#n-res').textContent=R?(focus!=null?G[focus].prods.length:R.res.length).toLocaleString():0;
+  $('#n-res').textContent=R?(focus!=null&&!focusAuto?G[focus].prods.length:R.res.length).toLocaleString():0;
   $('#n-buy').textContent=nb.toLocaleString();
   $('#tab-res').setAttribute('aria-selected',tab==='res'); $('#tab-buy').setAttribute('aria-selected',tab==='buy');
   const f=$('#filter');
-  if(focus!=null){ f.hidden=false; f.innerHTML=`${tab==='buy'?'ของที่ใช้คู่กับ':'กลุ่ม'}: <b>${esc(cut(G[focus].n,28))}</b> <button id="unf">ดูทั้งหมด ✕</button>`; $('#unf').onclick=()=>setFocus(null); }
+  if(focus!=null&&!focusAuto){ f.hidden=false; f.innerHTML=`${tab==='buy'?'ของที่ใช้คู่กับ':'กลุ่ม'}: <b>${esc(cut(G[focus].n,28))}</b> <button id="unf">ดูทั้งหมด ✕</button>`; $('#unf').onclick=()=>setFocus(null); }
   else if(tab==='buy'&&fg){ f.hidden=false; f.innerHTML=`ของที่ใช้คู่กับ: <b>${esc(cut(fg.n,28))}</b>`; }
   else f.hidden=true;
 }
@@ -712,10 +724,10 @@ function fsBase(){
   if(!R) return [];
   if(tab==='buy') return currentList();
   let a=R.res;
-  if(focus!=null && !a.some(r=>r.p.gi===focus)) a=a.concat(G[focus].prods.map(p=>({p,rel:-1,buy:true})));
+  if(focus!=null && !focusAuto && !a.some(r=>r.p.gi===focus)) a=a.concat(G[focus].prods.map(p=>({p,rel:-1,buy:true})));
   return a;
 }
-const fsSel=()=>tab==='buy'?fsBuyG:focus;
+const fsSel=()=>tab==='buy'?fsBuyG:(focusAuto?null:focus);
 function fullList(){
   let a=fsBase(); const sel=fsSel();
   a=sel!=null?a.filter(r=>r.p.gi===sel):a.slice();
@@ -757,6 +769,7 @@ $('#fsgroups').addEventListener('click',e=>{
   const b=e.target.closest('[data-fg]'); if(!b) return;
   const gi=b.dataset.fg===''?null:+b.dataset.fg; fsShown=60;
   if(tab==='buy'){ fsBuyG=gi; renderFull(); }
+  else if(gi==null){ focusAuto=true; shown=120; renderStrip(); }   // ทั้งหมด: keep the graph as it is, show every result
   else setFocus(gi);              // keeps the graph and bottom strip on the same group
   $('#fsgrid').scrollTop=0; showActiveChip();
 });
@@ -863,7 +876,8 @@ $('#cvpre').addEventListener('click',e=>{ const b=e.target.closest('[data-p]'); 
 
 /* ---------- wiring ---------- */
 function run(q){
-  R=search(q); focus=R&&R.groups.length?R.groups[0].g.i:null; tab='res'; hlCode=null; shown=120;
+  /* the top group is selected in the graph (to show its ซื้อคู่กัน), but lists still show every result until the customer picks a group */
+  R=search(q); focus=R&&R.groups.length?R.groups[0].g.i:null; focusAuto=true; tab='res'; hlCode=null; shown=120;
   const s=$('#summary');
   if(!R) s.innerHTML=''; else if(!R.res.length) s.innerHTML='ไม่พบสินค้า';
   else s.innerHTML=`${R.fuzzy?'<span class="fz">ไม่พบคำตรงตัว แสดงผลที่ใกล้เคียง</span> ':''}พบ <b>${R.res.length.toLocaleString()}</b> รายการ ใน <b>${R.groups.length}</b> กลุ่ม`;
