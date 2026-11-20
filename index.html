@@ -110,6 +110,18 @@ main{position:relative;min-height:0}
 .fsbar input:focus,.fsbar select:focus{outline:none;border-color:var(--accent)}
 .scope{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;white-space:nowrap}
 .scope button{border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:0 9px;font-size:12.5px}
+.fsbody{display:grid;grid-template-columns:270px minmax(0,1fr);min-height:0}
+.fsbody:has(.gchips:empty){grid-template-columns:minmax(0,1fr)}
+/* vertical group list (left side) */
+.gchips{display:flex;flex-direction:column;gap:2px;overflow-y:auto;padding:10px 8px 24px;background:var(--surface);border-right:1px solid var(--line);min-height:0;scrollbar-width:thin}
+.gchips:empty{display:none}
+.gchip{flex:0 0 auto;border:0;background:none;color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13.5px;line-height:1.35;text-align:left;display:flex;gap:8px;justify-content:space-between;align-items:baseline;width:100%}
+.gchip .t{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.gchip .c{flex:0 0 auto;font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.gchip:hover{background:var(--soft)}
+.gchip[aria-pressed="true"]{background:var(--soft);font-weight:600;box-shadow:inset 3px 0 0 var(--ink)}
+.gchips.buy .gchip[aria-pressed="true"]{box-shadow:inset 3px 0 0 var(--buy);color:var(--buy)}
+.gchip.all{font-weight:600}
 .fsgrid{overflow:auto;padding:16px 20px 28px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-content:start}
 .fsgrid .card{cursor:pointer}
 .fsgrid .more{min-height:120px;grid-column:1/-1}
@@ -270,6 +282,14 @@ body.cart-open .drawer{transform:none}
   .tools{left:10px;top:10px;bottom:auto}
   .conv{left:10px;right:10px;top:50px;bottom:auto;width:auto;max-height:calc(100% - 60px);overflow:auto}
   .fshead,.fsbar{padding-left:14px;padding-right:14px}
+  .fsbody{grid-template-columns:116px minmax(0,1fr)}
+  .gchips{padding:6px 4px 24px;scrollbar-width:none}
+  .gchips::-webkit-scrollbar{display:none}
+  .gchip{flex-direction:column;align-items:flex-start;gap:1px;padding:9px 8px;font-size:12.5px}
+  .gchip .t{-webkit-line-clamp:4}
+  .fsbody:has(.gchips:not(:empty)) .fsgrid{grid-template-columns:minmax(0,1fr);padding:10px 10px 24px}
+  .fsbar input{flex:1 1 50%;min-width:50%}
+  .fsbar select{flex:0 1 auto;max-width:45%}
   .fshead .back span{display:none}
   .fsgrid{padding:12px 14px 24px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
   .fsgrid .card{padding:9px 10px}
@@ -368,11 +388,13 @@ body.cart-open .drawer{transform:none}
   <div class="fsbar">
     <button class="tab" role="tab" id="fs-res">ผลการค้นหา<span class="n" id="fsn-res">0</span></button>
     <button class="tab buyt" role="tab" id="fs-buy">ซื้อคู่กัน<span class="n" id="fsn-buy">0</span></button>
-    <span class="scope" id="fsscope" hidden></span>
     <input id="fsfilter" type="search" autocomplete="off" placeholder="กรองในรายการ: ชื่อหรือรหัสสินค้า" aria-label="กรองในรายการ">
     <select id="fssort" aria-label="เรียงลำดับ"><option value="rel">เรียงตามความตรง</option><option value="pa">ราคา ต่ำ → สูง</option><option value="pd">ราคา สูง → ต่ำ</option><option value="nm">ชื่อ ก → ฮ</option></select>
   </div>
-  <div class="fsgrid" id="fsgrid"></div>
+  <div class="fsbody">
+    <nav class="gchips" id="fsgroups" aria-label="เลือกกลุ่มสินค้า"></nav>
+    <div class="fsgrid" id="fsgrid"></div>
+  </div>
 </section>
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" aria-label="ตะกร้าสินค้า">
@@ -683,9 +705,20 @@ $('#strip').addEventListener('click',e=>{
     if(p.gi>=0 && focus!==p.gi && tab==='res'){ focus=p.gi; build(); renderInfo(); renderTabs(); } else render(); }
 });
 /* ---------- full-screen item list ---------- */
-let fsShown=60, fsList=[];
+let fsShown=60, fsList=[], fsBuyG=null;
+/* all items for the current tab, before choosing a group:
+   ผลการค้นหา → every search result (plus the selected group if it came from ซื้อคู่กัน); ซื้อคู่กัน → all buy-together items */
+function fsBase(){
+  if(!R) return [];
+  if(tab==='buy') return currentList();
+  let a=R.res;
+  if(focus!=null && !a.some(r=>r.p.gi===focus)) a=a.concat(G[focus].prods.map(p=>({p,rel:-1,buy:true})));
+  return a;
+}
+const fsSel=()=>tab==='buy'?fsBuyG:focus;
 function fullList(){
-  let a=currentList().slice();
+  let a=fsBase(); const sel=fsSel();
+  a=sel!=null?a.filter(r=>r.p.gi===sel):a.slice();
   const q=norm($('#fsfilter').value);
   if(q) a=a.filter(r=>r.p.nName.includes(q)||r.p.nCode.includes(q));
   const pr=p=>p.price>0?amt(p,1):Infinity, srt=$('#fssort').value;
@@ -700,20 +733,39 @@ function renderFull(){
   $('#fsn').textContent=`${fsList.length.toLocaleString()} รายการ`+($('#fsfilter').value.trim()?' ที่ตรงกับตัวกรอง':'');
   $('#fsn-res').textContent=$('#n-res').textContent; $('#fsn-buy').textContent=$('#n-buy').textContent;
   $('#fs-res').setAttribute('aria-selected',tab==='res'); $('#fs-buy').setAttribute('aria-selected',tab==='buy');
-  const sc=$('#fsscope'), fg=focus!=null?G[focus]:(tab==='buy'&&R&&R.groups[0]?R.groups[0].g:null);
-  if(fg){ sc.hidden=false; sc.innerHTML=`${tab==='buy'?'ใช้คู่กับ':'เฉพาะกลุ่ม'}: <b>${esc(cut(fg.n,24))}</b>${focus!=null&&tab==='res'?' <button id="fsall">ดูทุกกลุ่ม ✕</button>':''}`;
-    const b=$('#fsall'); if(b) b.onclick=()=>{ setFocus(null); renderFull(); }; } else sc.hidden=true;
+  renderGroupChips();
+  if(tab==='buy'){ const fg=focus!=null?G[focus]:(R&&R.groups[0]?R.groups[0].g:null); if(fg) $('#fsn').textContent+=` · ใช้คู่กับ ${cut(fg.n,28)}`; }
   const g=$('#fsgrid');
   g.innerHTML=fsList.length?fsList.slice(0,fsShown).map(cardHTML).join('')+(fsList.length>fsShown?`<button class="more" id="fsmore">แสดงเพิ่มอีก ${(fsList.length-fsShown).toLocaleString()} รายการ</button>`:'')
     :`<div class="none">${$('#fsfilter').value.trim()?'ไม่มีสินค้าที่ตรงกับตัวกรอง ลองพิมพ์ให้สั้นลง':'ไม่มีสินค้าในรายการนี้'}</div>`;
   const m=$('#fsmore'); if(m) m.onclick=()=>{fsShown+=60;renderFull()};
 }
-function openFull(){ fsShown=60; $('#fs').hidden=false; renderFull(); $('#fsgrid').scrollTop=0; $('#fsclose').focus(); }
+function renderGroupChips(){
+  const box=$('#fsgroups'), base=fsBase(), sel=fsSel(), cnt=new Map();
+  base.forEach(r=>{ if(r.p.gi>=0) cnt.set(r.p.gi,(cnt.get(r.p.gi)||0)+1); });
+  let order=[];
+  if(tab==='buy'){ const fg=focus!=null?G[focus]:(R&&R.groups[0]?R.groups[0].g:null); if(fg) order=fg.b.filter(i=>cnt.has(i)); }
+  else if(R){ order=R.groups.map(x=>x.g.i).filter(i=>cnt.has(i)); }
+  cnt.forEach((_,i)=>{ if(!order.includes(i)) order.push(i); });
+  if(order.length<2 && sel==null){ box.innerHTML=''; return; }
+  box.className='gchips'+(tab==='buy'?' buy':'');
+  box.innerHTML=`<button class="gchip all" data-fg="" aria-pressed="${sel==null}"><span class="t">ทั้งหมด</span><span class="c">${base.length.toLocaleString()}</span></button>`+
+    order.map(i=>`<button class="gchip" data-fg="${i}" aria-pressed="${sel===i}" title="${esc(G[i].n)}"><span class="t">${esc(G[i].n)}</span><span class="c">${cnt.get(i).toLocaleString()}</span></button>`).join('');
+}
+function showActiveChip(){ const a=$('#fsgroups [aria-pressed="true"]'); if(a) a.scrollIntoView({block:'nearest',inline:'nearest'}); }
+$('#fsgroups').addEventListener('click',e=>{
+  const b=e.target.closest('[data-fg]'); if(!b) return;
+  const gi=b.dataset.fg===''?null:+b.dataset.fg; fsShown=60;
+  if(tab==='buy'){ fsBuyG=gi; renderFull(); }
+  else setFocus(gi);              // keeps the graph and bottom strip on the same group
+  $('#fsgrid').scrollTop=0; showActiveChip();
+});
+function openFull(){ fsShown=60; fsBuyG=null; $('#fs').hidden=false; renderFull(); $('#fsgrid').scrollTop=0; showActiveChip(); $('#fsclose').focus(); }
 function closeFull(){ $('#fs').hidden=true; $('#fsfilter').value=''; }
 $('#fsclose').onclick=closeFull;
 $('#fscart').onclick=()=>openCart(true);
-$('#fs-res').onclick=()=>{tab='res';shown=120;fsShown=60;renderStrip()};
-$('#fs-buy').onclick=()=>{tab='buy';shown=120;fsShown=60;renderStrip()};
+$('#fs-res').onclick=()=>{tab='res';shown=120;fsShown=60;renderStrip();showActiveChip()};
+$('#fs-buy').onclick=()=>{tab='buy';fsBuyG=null;shown=120;fsShown=60;renderStrip()};
 let fsDeb; $('#fsfilter').addEventListener('input',()=>{clearTimeout(fsDeb);fsDeb=setTimeout(()=>{fsShown=60;renderFull()},150)});
 $('#fssort').onchange=()=>{fsShown=60;renderFull()};
 $('#fsgrid').addEventListener('scroll',e=>{const g=e.target; if(fsList.length>fsShown&&g.scrollTop+g.clientHeight>g.scrollHeight-400){fsShown+=60;renderFull()}});
