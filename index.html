@@ -474,33 +474,39 @@ function search(raw){
   if(toks.length>1) toks.push(norm(q));
   const gScore=new Float32Array(G.length);
   for(const g of G){ let s=0,hit=0;
+    /* Thai names put the main word first: "เหล็กเพส" is steel, "ดอกเจาะเหล็ก" is a drill bit for steel.
+       So a name or synonym that STARTS with the word scores much higher than one that only contains it. */
     for(const t of toks){ let b=0;
-      if(g.nSyn.includes(t)) b=12; else if(g.nSyn.some(x=>x.includes(t))) b=9;
-      if(b<10 && g.nN.includes(t)) b=Math.max(b,g.nN===t?12:8);
-      if(!b && g.nW.includes(t)) b=5;
-      if(!b && g.nD.includes(t)) b=3;
+      if(g.nN===t||g.nSyn.includes(t)) b=14;
+      else if(g.nN.startsWith(t)) b=13;
+      else if(g.nSyn.some(x=>x.startsWith(t))) b=11;
+      else if(g.nN.includes(t)) b=6;
+      else if(g.nSyn.some(x=>x.includes(t))) b=5;
+      else if(g.nW.includes(t)) b=4;
+      else if(g.nD.includes(t)) b=2;
       if(b){s+=b;hit++} }
     if(hit===toks.length && toks.length>1) s*=1.4;
     gScore[g.i]=s; }
   const res=[];
   for(const p of P){ let own=0;
     for(const t of toks){ if(p.nCode===t) own+=30; else if(t.length>=3&&p.nCode.startsWith(t)) own+=14;
-      else if(p.nName.includes(t)) own+=10; }
+      else if(p.nName.startsWith(t)) own+=16;
+      else if(p.nName.includes(t)) own+=7; }
     const gs=p.gi>=0?gScore[p.gi]:0;
-    const s=own+gs*.8; if(s>0) res.push({p,s,own}); }
+    const s=own+gs*.6; if(s>0) res.push({p,s,own}); }
   let fuzzy=false;
   if(!res.length){ fuse(); if(fuseG){ fuzzy=true;
       for(const r of fuseG.search(q,{limit:8})) gScore[r.item.i]=Math.max(gScore[r.item.i],8*(1-r.score));
       const seen=new Set();
       for(const r of fuseP.search(q,{limit:60})){ seen.add(r.item.i); res.push({p:r.item,s:10*(1-r.score),own:1}); }
       for(const g of G) if(gScore[g.i]>0) for(const p of g.prods) if(!seen.has(p.i)) res.push({p,s:gScore[g.i]*.8,own:0}); } }
-  res.sort((a,b)=>b.s-a.s||(b.p.price>0)-(a.p.price>0));
+  res.sort((a,b)=>b.s-a.s||(b.p.price>0)-(a.p.price>0)||a.p.name.length-b.p.name.length);
   const max=res.length?res[0].s:1;
   res.forEach(r=>r.rel=r.s/max);
   // groups ranked: own group score + best product hit in group
   const gAgg=new Map();
   for(const r of res){ if(r.p.gi<0) continue; const cur=gAgg.get(r.p.gi)||{s:gScore[r.p.gi],n:0};
-    cur.n++; if(r.own) cur.s=Math.max(cur.s,gScore[r.p.gi]+Math.min(r.own,12)*.6); gAgg.set(r.p.gi,cur); }
+    cur.n++; if(r.own) cur.s=Math.max(cur.s,gScore[r.p.gi]+Math.min(r.own,16)*.6); gAgg.set(r.p.gi,cur); }
   const groups=[...gAgg].map(([gi,v])=>({g:G[gi],s:v.s,n:v.n})).sort((a,b)=>b.s-a.s||b.n-a.n);
   return {q,toks,res,groups,fuzzy};
 }
